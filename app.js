@@ -38,6 +38,18 @@ const getUserName = function (user) {
   return  "UNKNOWN_USER";
 }
 
+// sends a pass/fail image url
+const sendFlubrImage = function (channel, imageType) {
+  return request(getFlubrUrl(imageType), function (error, response, body) {
+    if (!error && response.statusCode === 200) {
+      log(`${imageType} image sent!`);
+      return channel.send(body);
+    }
+    return console.error("Error: " + error);
+  });
+}
+
+// wrapper for console.log
 const log = function (msg) {
   return console.log(`→  ${msg}`);
 }
@@ -86,11 +98,13 @@ slack.on('message', function (message) {
   const timestamp = message.ts;
   const text = message.text;
 
-  log(`Received: ${type} ${channelName} ${userName} ${timestamp} ${text}`);
+  if (text) {
+    log(`Received: ${type} ${channelName} ${userName} ${timestamp} ${text}`);
+  }
 
-  // respond to build messages with pass/fail image url
   if (type === 'message' && text && channel) {
 
+    // respond to build messages with pass/fail image url
     let imageType = null;
 
     if (text.match(PASS)) {
@@ -100,13 +114,7 @@ slack.on('message', function (message) {
     }
 
     if (imageType !== null) {
-      return request(getFlubrUrl(imageType), function(error, response, body) {
-        if (!error && response.statusCode === 200) {
-          log(`${imageType} image sent!`);
-          return channel.send(body);
-        }
-        return console.error("Error: " + error);
-      });
+      return sendFlubrImage(channel, imageType);
     }
 
   } else {
@@ -115,13 +123,13 @@ slack.on('message', function (message) {
     const typeError = (type !== 'message') ? `unexpected type ${type}.` : null;
 
     // can happen on delete/edit/a few other events
-    const textError = (text === null) ? 'text was undefined.' : null;
+    const textError = (!text) ? 'text was undefined.' : null;
 
     // in theory some events could happen with no channel
-    const channelError = (channel === null) ? 'channel was undefined.' : null;
+    const channelError = (!channel) ? 'channel was undefined.' : null;
 
     // space delimited string of my errors
-    const errors = [typeError, textError, channelError].filter(function(el) {
+    const errors = [typeError, textError, channelError].filter(function (el) {
       return el !== null;
     }).join(' ');
 
