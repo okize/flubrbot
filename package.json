@@ -1,0 +1,27 @@
+{
+  "name": "flubrbot",
+  "private": true,
+  "version": "1.0.0",
+  "engines": {
+    "iojs": ">=2.0.0"
+  },
+  "description": "Slack integration for Flubr.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/okize/flubrbot"
+  },
+  "author": "Morgan Wigmanich <okize123@gmail.com> (https://github.com/okize)",
+  "homepage": "https://github.com/okize/flubrbot",
+  "bugs": "https://github.com/okize/flubrbot/issues",
+  "license": "MIT",
+  "dependencies": {
+    "lodash": "^3.9.3",
+    "request": "^2.58.0",
+    "slack-client": "^1.4.1"
+  }
+}
