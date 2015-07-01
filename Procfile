@@ -1,1 +1,1 @@
-hubot: node app.js
+flubrbot: node app.js
