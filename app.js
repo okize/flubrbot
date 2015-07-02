@@ -34,6 +34,11 @@ const getFlubrType = function (text) {
   }
 };
 
+// returns a regex
+const getFlubrbotRegex = function (self) {
+  return new RegExp(`<@${self.id}>`, 'g');
+};
+
 // determines channel name
 const getChannelName = function (channel) {
   let channelName = (channel && channel.is_channel) ? '#' : '';
@@ -41,12 +46,23 @@ const getChannelName = function (channel) {
   return channelName;
 };
 
-// determines user name
+// determines username
 const getUserName = function (user) {
   if (user && user.name) {
     return `@${user.name}`;
   }
-  return  'UNKNOWN_USER';
+  return 'UNKNOWN_USER';
+};
+
+// determines user's first name
+const getFirstName = function (user) {
+  if (user) {
+    if (user.profile.first_name) {
+      return user.profile.first_name;
+    }
+    return user.name;
+  }
+  return '';
 };
 
 // sends a pass/fail image url
@@ -119,6 +135,11 @@ slack.on('message', function (message) {
     let imageType = getFlubrType(text);
     if (imageType !== null) {
       return sendFlubrImage(channel, imageType);
+    }
+
+    // respond to direct notification
+    if (text.match(getFlubrbotRegex(slack.self))) {
+      channel.send(`${userName} hello ${getFirstName(user)}`)
     }
 
   } else {
