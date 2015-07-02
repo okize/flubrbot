@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const Slack = require('slack-client');
 const request = require('request');
@@ -11,32 +11,43 @@ const FAIL = new RegExp(process.env.FLUBR_FAIL, 'g');
 const AUTORECONNECT = true;
 const AUTOMARK = true;
 
-// returns a valid uri for pass/fail image requests
-const getFlubrUrl = function (imageType) {
-  return `${FLUBR_URL}/api/images/random/${imageType}`;
-};
-
 // enumerate object keys & values
 const entries = function* (obj) {
   for (let key of Object.keys(obj)) {
     yield [key, obj[key]];
   }
-}
+};
+
+// returns a valid uri for pass/fail image requests
+const getFlubrUrl = function (flubrType) {
+  return `${FLUBR_URL}/api/images/random/${flubrType}`;
+};
+
+// returns image type (pass/fail) or null
+const getFlubrType = function (text) {
+  if (text.match(PASS)) {
+    return 'pass';
+  } else if (text.match(FAIL)) {
+    return 'fail';
+  } else {
+    return null;
+  }
+};
 
 // determines channel name
 const getChannelName = function (channel) {
   let channelName = (channel && channel.is_channel) ? '#' : '';
   channelName = channelName + (channel ? channel.name : 'UNKNOWN_CHANNEL');
   return channelName;
-}
+};
 
 // determines user name
 const getUserName = function (user) {
   if (user && user.name) {
     return `@${user.name}`;
   }
-  return  "UNKNOWN_USER";
-}
+  return  'UNKNOWN_USER';
+};
 
 // sends a pass/fail image url
 const sendFlubrImage = function (channel, imageType) {
@@ -47,12 +58,12 @@ const sendFlubrImage = function (channel, imageType) {
     }
     return console.error("Error: " + error);
   });
-}
+};
 
 // wrapper for console.log
 const log = function (msg) {
   return console.log(`→  ${msg}`);
-}
+};
 
 // init slack instance
 const slack = new Slack(TOKEN, AUTORECONNECT, AUTOMARK);
@@ -105,14 +116,7 @@ slack.on('message', function (message) {
   if (type === 'message' && text && channel) {
 
     // respond to build messages with pass/fail image url
-    let imageType = null;
-
-    if (text.match(PASS)) {
-      imageType = 'pass';
-    } else if (text.match(FAIL)) {
-      imageType = 'fail';
-    }
-
+    let imageType = getFlubrType(text);
     if (imageType !== null) {
       return sendFlubrImage(channel, imageType);
     }
