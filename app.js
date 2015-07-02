@@ -104,7 +104,7 @@ var getFlubrType = function getFlubrType(text) {
 
 // returns a regex
 var getFlubrbotRegex = function getFlubrbotRegex(self) {
-  return new RegExp('<@' + self.id + '> ping', 'g');
+  return new RegExp('.*' + self.id + '.*ping', 'ig');
 };
 
 // determines channel name

@@ -36,7 +36,7 @@ const getFlubrType = function (text) {
 
 // returns a regex
 const getFlubrbotRegex = function (self) {
-  return new RegExp(`<@${self.id}> ping`, 'g');
+  return new RegExp(`.*${self.id}.*ping`, 'ig');
 };
 
 // determines channel name
