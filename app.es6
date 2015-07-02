@@ -36,7 +36,7 @@ const getFlubrType = function (text) {
 
 // returns a regex
 const getFlubrbotRegex = function (self) {
-  return new RegExp(`<@${self.id}>`, 'g');
+  return new RegExp(`<@${self.id}> ping`, 'g');
 };
 
 // determines channel name
@@ -137,9 +137,9 @@ slack.on('message', function (message) {
       return sendFlubrImage(channel, imageType);
     }
 
-    // respond to direct notification
+    // respond to ping
     if (text.match(getFlubrbotRegex(slack.self))) {
-      channel.send(`${userName} hello ${getFirstName(user)}`)
+      channel.send(`PONG ${getFirstName(user)}`)
     }
 
   } else {
