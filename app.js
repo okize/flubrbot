@@ -133,17 +133,6 @@ var getFirstName = function getFirstName(user) {
   return '';
 };
 
-// sends a pass/fail image url
-var sendFlubrImage = function sendFlubrImage(channel, imageType) {
-  return request(getFlubrUrl(imageType), function (error, response, body) {
-    if (!error && response.statusCode === 200) {
-      log(imageType + ' image sent!');
-      return channel.send(body);
-    }
-    return console.error('Error: ' + error);
-  });
-};
-
 // wrapper for console.log
 var log = function log(msg) {
   return console.log('→  ' + msg);
@@ -234,17 +223,26 @@ slack.on('message', function (message) {
   }
 
   if (type === 'message' && text && channel) {
+    (function () {
 
-    // respond to build messages with pass/fail image url
-    var imageType = getFlubrType(text);
-    if (imageType !== null) {
-      return sendFlubrImage(channel, imageType);
-    }
+      // respond to build messages with pass/fail image url
+      var imageType = getFlubrType(text);
+      if (imageType !== null) {
 
-    // respond to ping
-    if (text.match(getFlubrbotRegex(slack.self))) {
-      channel.send('PONG ' + getFirstName(user));
-    }
+        request(getFlubrUrl(imageType), function (error, response, body) {
+          if (!error && response.statusCode === 200) {
+            log(imageType + ' image sent!');
+            return channel.send(body);
+          }
+          return console.error('Error: ' + error);
+        });
+      }
+
+      // respond to ping
+      if (text.match(getFlubrbotRegex(slack.self))) {
+        channel.send('PONG ' + getFirstName(user));
+      }
+    })();
   } else {
 
     // this one should probably be impossible, since we're in slack.on 'message'

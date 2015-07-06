@@ -65,17 +65,6 @@ const getFirstName = function (user) {
   return '';
 };
 
-// sends a pass/fail image url
-const sendFlubrImage = function (channel, imageType) {
-  return request(getFlubrUrl(imageType), function (error, response, body) {
-    if (!error && response.statusCode === 200) {
-      log(`${imageType} image sent!`);
-      return channel.send(body);
-    }
-    return console.error("Error: " + error);
-  });
-};
-
 // wrapper for console.log
 const log = function (msg) {
   return console.log(`→  ${msg}`);
@@ -134,7 +123,15 @@ slack.on('message', function (message) {
     // respond to build messages with pass/fail image url
     let imageType = getFlubrType(text);
     if (imageType !== null) {
-      return sendFlubrImage(channel, imageType);
+
+      request(getFlubrUrl(imageType), function (error, response, body) {
+        if (!error && response.statusCode === 200) {
+          log(`${imageType} image sent!`);
+          return channel.send(body);
+        }
+        return console.error("Error: " + error);
+      });
+
     }
 
     // respond to ping
