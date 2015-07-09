@@ -231,7 +231,7 @@ slack.on('message', function (message) {
 
         request(getFlubrUrl(imageType), function (error, response, body) {
           if (!error && response.statusCode === 200) {
-            log(imageType + ' image sent!');
+            log(imageType + ' image sent');
             return channel.send(body);
           }
           return console.error('Error: ' + error);
@@ -240,7 +240,8 @@ slack.on('message', function (message) {
 
       // respond to ping
       if (text.match(getFlubrbotRegex(slack.self))) {
-        channel.send('PONG ' + getFirstName(user));
+        log('sending PONG');
+        channel.send(userName + ': PONG');
       }
     })();
   } else {
