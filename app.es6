@@ -1,5 +1,3 @@
-'use strict';
-
 const Slack = require('slack-client');
 const request = require('request');
 const _ = require('lodash');
@@ -29,9 +27,8 @@ const getFlubrType = function (text) {
     return 'pass';
   } else if (text.match(FAIL)) {
     return 'fail';
-  } else {
-    return null;
   }
+  return null;
 };
 
 // returns a regex
@@ -129,7 +126,7 @@ slack.on('message', function (message) {
           log(`${imageType} image sent`);
           return channel.send(body);
         }
-        return console.error("Error: " + error);
+        return console.error(`Error: ${error}`);
       });
 
     }
@@ -137,7 +134,7 @@ slack.on('message', function (message) {
     // respond to ping
     if (text.match(getFlubrbotRegex(slack.self))) {
       log(`sending PONG`);
-      channel.send(`${userName}: PONG`)
+      channel.send(`${userName}: PONG`);
     }
 
   } else {
@@ -162,9 +159,16 @@ slack.on('message', function (message) {
 
 });
 
+// workaround for bug:
+// https://github.com/slackhq/node-slack-client/issues/5
+slack.on('close', function () {
+  log('Connection closed, retrying');
+  slack.reconnect();
+});
+
 // log errors
 slack.on('error', function (error) {
-  return console.error("Error: " + error);
+  return console.error(`Error: ${error}`);
 });
 
 slack.login();

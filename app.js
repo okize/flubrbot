@@ -97,9 +97,8 @@ var getFlubrType = function getFlubrType(text) {
     return 'pass';
   } else if (text.match(FAIL)) {
     return 'fail';
-  } else {
-    return null;
   }
+  return null;
 };
 
 // returns a regex
@@ -262,6 +261,13 @@ slack.on('message', function (message) {
 
     return log('@' + slack.self.name + ' could not respond. ' + errors);
   }
+});
+
+// workaround for bug:
+// https://github.com/slackhq/node-slack-client/issues/5
+slack.on('close', function () {
+  log('Connection closed, retrying');
+  slack.reconnect();
 });
 
 // log errors
