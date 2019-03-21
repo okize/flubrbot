@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "engines": {
-    "iojs": ">=2.0.0"
+    "node": ">=8.15.0"
   },
   "description": "Slack integration for Flubr.",
   "main": "app.js",
