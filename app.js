@@ -1,98 +1,28 @@
-'use strict';
+const Slack = require('slack-client');
+const request = require('request');
+const _ = require('lodash');
 
-var _regeneratorRuntime = require('babel-runtime/regenerator')['default'];
-
-var _getIterator = require('babel-runtime/core-js/get-iterator')['default'];
-
-var _Object$keys = require('babel-runtime/core-js/object/keys')['default'];
-
-var Slack = require('slack-client');
-var request = require('request');
-var _ = require('lodash');
-
-var TOKEN = process.env.FLUBR_SLACK_TOKEN;
-var FLUBR_URL = process.env.FLUBR_URL;
-var PASS = new RegExp(process.env.FLUBR_PASS, 'g');
-var FAIL = new RegExp(process.env.FLUBR_FAIL, 'g');
-var AUTORECONNECT = true;
-var AUTOMARK = true;
+const TOKEN = process.env.FLUBR_SLACK_TOKEN;
+const FLUBR_URL = process.env.FLUBR_URL;
+const PASS = new RegExp(process.env.FLUBR_PASS, 'g');
+const FAIL = new RegExp(process.env.FLUBR_FAIL, 'g');
+const AUTORECONNECT = true;
+const AUTOMARK = true;
 
 // enumerate object keys & values
-var entries = _regeneratorRuntime.mark(function entries(obj) {
-  var _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, key;
-
-  return _regeneratorRuntime.wrap(function entries$(context$1$0) {
-    while (1) switch (context$1$0.prev = context$1$0.next) {
-      case 0:
-        _iteratorNormalCompletion = true;
-        _didIteratorError = false;
-        _iteratorError = undefined;
-        context$1$0.prev = 3;
-        _iterator = _getIterator(_Object$keys(obj));
-
-      case 5:
-        if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
-          context$1$0.next = 12;
-          break;
-        }
-
-        key = _step.value;
-        context$1$0.next = 9;
-        return [key, obj[key]];
-
-      case 9:
-        _iteratorNormalCompletion = true;
-        context$1$0.next = 5;
-        break;
-
-      case 12:
-        context$1$0.next = 18;
-        break;
-
-      case 14:
-        context$1$0.prev = 14;
-        context$1$0.t0 = context$1$0['catch'](3);
-        _didIteratorError = true;
-        _iteratorError = context$1$0.t0;
-
-      case 18:
-        context$1$0.prev = 18;
-        context$1$0.prev = 19;
-
-        if (!_iteratorNormalCompletion && _iterator['return']) {
-          _iterator['return']();
-        }
-
-      case 21:
-        context$1$0.prev = 21;
-
-        if (!_didIteratorError) {
-          context$1$0.next = 24;
-          break;
-        }
-
-        throw _iteratorError;
-
-      case 24:
-        return context$1$0.finish(21);
-
-      case 25:
-        return context$1$0.finish(18);
-
-      case 26:
-      case 'end':
-        return context$1$0.stop();
-    }
-  }, entries, this, [[3, 14, 18, 26], [19,, 21, 25]]);
-});
+const entries = function* (obj) {
+  for (let key of Object.keys(obj)) {
+    yield [key, obj[key]];
+  }
+};
 
 // returns a valid uri for pass/fail image requests
-var getFlubrUrl = function getFlubrUrl(flubrType) {
-  return FLUBR_URL + '/api/images/random/' + flubrType;
+const getFlubrUrl = function (flubrType) {
+  return `${FLUBR_URL}/api/images/random/${flubrType}`;
 };
 
 // returns image type (pass/fail) or null
-var getFlubrType = function getFlubrType(text) {
+const getFlubrType = function (text) {
   if (text.match(PASS)) {
     return 'pass';
   } else if (text.match(FAIL)) {
@@ -102,27 +32,27 @@ var getFlubrType = function getFlubrType(text) {
 };
 
 // returns a regex
-var getFlubrbotRegex = function getFlubrbotRegex(self) {
-  return new RegExp('.*' + self.id + '.*ping', 'ig');
+const getFlubrbotRegex = function (self) {
+  return new RegExp(`.*${self.id}.*ping`, 'ig');
 };
 
 // determines channel name
-var getChannelName = function getChannelName(channel) {
-  var channelName = channel && channel.is_channel ? '#' : '';
+const getChannelName = function (channel) {
+  let channelName = (channel && channel.is_channel) ? '#' : '';
   channelName = channelName + (channel ? channel.name : 'UNKNOWN_CHANNEL');
   return channelName;
 };
 
 // determines username
-var getUserName = function getUserName(user) {
+const getUserName = function (user) {
   if (user && user.name) {
-    return '@' + user.name;
+    return `@${user.name}`;
   }
   return 'UNKNOWN_USER';
 };
 
 // determines user's first name
-var getFirstName = function getFirstName(user) {
+const getFirstName = function (user) {
   if (user) {
     if (user.profile.first_name) {
       return user.profile.first_name;
@@ -133,134 +63,100 @@ var getFirstName = function getFirstName(user) {
 };
 
 // wrapper for console.log
-var log = function log(msg) {
-  return console.log('→  ' + msg);
+const log = function (msg) {
+  return console.log(`→  ${msg}`);
 };
 
 // init slack instance
-var slack = new Slack(TOKEN, AUTORECONNECT, AUTOMARK);
+const slack = new Slack(TOKEN, AUTORECONNECT, AUTOMARK);
 
 // connect to Slack
 slack.on('open', function () {
 
-  var channels = [];
-  var groups = [];
+  let channels = [];
+  let groups = [];
 
   // get the channels that bot is a member of
-  var _iteratorNormalCompletion2 = true;
-  var _didIteratorError2 = false;
-  var _iteratorError2 = undefined;
-
-  try {
-    for (var _iterator2 = _getIterator(entries(slack.channels)), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-      var channel = _step2.value;
-
-      if (channel[1].is_member) {
-        channels.push('#' + channel[1].name);
-      }
-    }
-  } catch (err) {
-    _didIteratorError2 = true;
-    _iteratorError2 = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion2 && _iterator2['return']) {
-        _iterator2['return']();
-      }
-    } finally {
-      if (_didIteratorError2) {
-        throw _iteratorError2;
-      }
+  for (let channel of entries(slack.channels)) {
+    if (channel[1].is_member) {
+      channels.push(`#${channel[1].name}`);
     }
   }
 
   // get all groups that are open and not archived
-  var _iteratorNormalCompletion3 = true;
-  var _didIteratorError3 = false;
-  var _iteratorError3 = undefined;
-
-  try {
-    for (var _iterator3 = _getIterator(entries(slack.groups)), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-      var group = _step3.value;
-
-      if (group[1].is_open && !group[1].is_archived) {
-        groups.push(group[1].name);
-      }
-    }
-  } catch (err) {
-    _didIteratorError3 = true;
-    _iteratorError3 = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion3 && _iterator3['return']) {
-        _iterator3['return']();
-      }
-    } finally {
-      if (_didIteratorError3) {
-        throw _iteratorError3;
-      }
+  for (let group of entries(slack.groups)) {
+    if (group[1].is_open && !group[1].is_archived) {
+      groups.push(group[1].name);
     }
   }
 
   // connection message
-  return console.log('\n  ****************************************************************\n  *  Connected to Slack. You are @' + slack.self.name + ' of ' + slack.team.name + '.\n  *  You are in: ' + _.union(channels, groups).join(', ') + '.\n  ****************************************************************\n  ');
+  return console.log(`
+  ****************************************************************
+  *  Connected to Slack. You are @${slack.self.name} of ${slack.team.name}.
+  *  You are in: ${(_.union(channels, groups).join(', '))}.
+  ****************************************************************
+  `);
+
 });
 
 // respond to messages in Slack
 slack.on('message', function (message) {
 
-  var channel = slack.getChannelGroupOrDMByID(message.channel);
-  var user = slack.getUserByID(message.user);
-  var channelName = getChannelName(channel);
-  var userName = getUserName(user);
-  var type = message.type;
-  var timestamp = message.ts;
-  var text = message.text;
+  const channel = slack.getChannelGroupOrDMByID(message.channel);
+  const user = slack.getUserByID(message.user);
+  const channelName = getChannelName(channel);
+  const userName = getUserName(user);
+  const type = message.type;
+  const timestamp = message.ts;
+  const text = message.text;
 
   if (text) {
-    log('Received: ' + type + ' ' + channelName + ' ' + userName + ' ' + timestamp + ' ' + text);
+    log(`Received: ${type} ${channelName} ${userName} ${timestamp} ${text}`);
   }
 
   if (type === 'message' && text && channel) {
-    (function () {
 
-      // respond to build messages with pass/fail image url
-      var imageType = getFlubrType(text);
-      if (imageType !== null) {
+    // respond to build messages with pass/fail image url
+    let imageType = getFlubrType(text);
+    if (imageType !== null) {
 
-        request(getFlubrUrl(imageType), function (error, response, body) {
-          if (!error && response.statusCode === 200) {
-            log(imageType + ' image sent');
-            return channel.send(body);
-          }
-          return console.error('Error: ' + error);
-        });
-      }
+      request(getFlubrUrl(imageType), function (error, response, body) {
+        if (!error && response.statusCode === 200) {
+          log(`${imageType} image sent`);
+          return channel.send(body);
+        }
+        return console.error(`Error: ${error}`);
+      });
 
-      // respond to ping
-      if (text.match(getFlubrbotRegex(slack.self))) {
-        log('sending PONG');
-        channel.send(userName + ': PONG');
-      }
-    })();
+    }
+
+    // respond to ping
+    if (text.match(getFlubrbotRegex(slack.self))) {
+      log(`sending PONG`);
+      channel.send(`${userName}: PONG`);
+    }
+
   } else {
 
     // this one should probably be impossible, since we're in slack.on 'message'
-    var typeError = type !== 'message' ? 'unexpected type ' + type + '.' : null;
+    const typeError = (type !== 'message') ? `unexpected type ${type}.` : null;
 
     // can happen on delete/edit/a few other events
-    var textError = !text ? 'text was undefined.' : null;
+    const textError = (!text) ? 'text was undefined.' : null;
 
     // in theory some events could happen with no channel
-    var channelError = !channel ? 'channel was undefined.' : null;
+    const channelError = (!channel) ? 'channel was undefined.' : null;
 
     // space delimited string of my errors
-    var errors = [typeError, textError, channelError].filter(function (el) {
+    const errors = [typeError, textError, channelError].filter(function (el) {
       return el !== null;
     }).join(' ');
 
-    return log('@' + slack.self.name + ' could not respond. ' + errors);
+    return log(`@${slack.self.name} could not respond. ${errors}`);
+
   }
+
 });
 
 // workaround for bug:
@@ -272,8 +168,7 @@ slack.on('close', function () {
 
 // log errors
 slack.on('error', function (error) {
-  return console.error('Error: ' + error);
+  return console.error(`Error: ${error}`);
 });
 
 slack.login();
-
